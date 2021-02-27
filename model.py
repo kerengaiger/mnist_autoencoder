@@ -34,15 +34,14 @@ class DeNoiser(nn.Module):
         x = F.relu(self.conv3(x))
         x = self.pool(x)
 
-        h, w = x.shape[2], x.shape[3]
         x = x.reshape(x.shape[0], -1)
         # batch_size * (8*3*3) -> batch_size * hidden†_
         x = self.fc1(x)
-        return x, h, w
+        return x
 
-    def decoder(self, x, h, w):
+    def decoder(self, x):
         x = self.fc2(x)
-        x = x.view(x.shape[0], -1, h, w)
+        x = x.view(x.shape[0], -1, 3, 3)
 
         x = F.relu(self.t_conv1(x))
         x = F.relu(self.t_conv2(x))
@@ -53,5 +52,5 @@ class DeNoiser(nn.Module):
 
     def forward(self, x):
         x, h, w = self.encoder(x)
-        x = self.decoder(x, h, w)
+        x = self.decoder(x)
         return x

@@ -91,7 +91,7 @@ def validate(model, criterion, valid_loader, cnfg, e):
             valid_loss += loss.item() * images.size(0)
     valid_loss = valid_loss / len(valid_loader)
     print('Epoch: {}'.format(e),
-          '\tTraining Loss: {:.4f}'.format(valid_loader))
+          '\tTraining Loss: {:.4f}'.format(valid_loss))
     return valid_loss
 
 

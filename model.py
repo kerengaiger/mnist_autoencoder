@@ -6,6 +6,7 @@ class DeNoiser(nn.Module):
     def __init__(self, latent_dim):
         super(DeNoiser, self).__init__()
         # Encoder
+        self.latent_dim = latent_dim
         self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
         self.conv2 = nn.Conv2d(32, 16, 3, padding=1)
         self.conv3 = nn.Conv2d(16, 8, 3, padding=1)
@@ -51,6 +52,6 @@ class DeNoiser(nn.Module):
         return x
 
     def forward(self, x):
-        x, h, w = self.encoder(x)
+        x = self.encoder(x)
         x = self.decoder(x)
         return x

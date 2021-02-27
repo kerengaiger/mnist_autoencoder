@@ -117,9 +117,9 @@ def train(cnfg):
     model = DeNoiser(induce_latent_dim(orig_h, orig_w, cnfg.alpha))
 
     if cnfg.loss == 'mse':
-        criterion = nn.MSELoss(reduction='sum')
+        criterion = nn.MSELoss()
     else:
-        criterion = nn.BCELoss(reduction='sum')
+        criterion = nn.BCELoss()
 
     optimizer = torch.optim.Adam(model.parameters(), cnfg.lr)
 

@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--noise_var', type=float, default=0.5, help="variance of gausian noise")
     parser.add_argument('--valid_split', type=float, default=0.2, help="part of dataset to use as validation set")
     parser.add_argument('--loss', type=str, default='bce', help="loss function to use for training: BCE or MSE")
+    parser.add_argument('--plot_imgs', action='store_true', help="plots a random image in each epoch")
     parser.add_argument('--model_file', type=str, default='mnist_autoencoder.pt', help="trained model path")
     return parser.parse_args()
 

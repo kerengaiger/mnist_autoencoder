@@ -10,6 +10,8 @@ import torch.nn as nn
 
 from model import DeNoiser
 
+from tqdm import tqdm
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,7 +21,7 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=10, help="number of epochs to run on training")
     parser.add_argument('--noise_var', type=float, default=0.5, help="variance of gausian noise")
     parser.add_argument('--valid_split', type=float, default=0.2, help="part of dataset to use as validation set")
-    parser.add_argument('--loss', type=str, default='bce', help="loss function to use for training: BCE or MSE")
+    parser.add_argument('--loss', type=str, default='mse', help="loss function to use for training: BCE or MSE")
     parser.add_argument('--plot_imgs', action='store_true', help="plots a random image in each epoch")
     parser.add_argument('--model_file', type=str, default='mnist_autoencoder.pt', help="trained model path")
     return parser.parse_args()
@@ -46,12 +48,12 @@ def split_train_valid(dataset, batch_size, valid_split, shuffle_dataset = True,r
 
 
 def induce_latent_dim(h, w, alpha):
-    return np.floor(h * w * alpha)
+    return int(np.floor(h * w * alpha))
 
 
 def add_noise(images, cnfg):
     ## add random noise to the input images
-    noisy_imgs = images + cnfg['noise_var'] * torch.randn(*images.shape)
+    noisy_imgs = images + cnfg.noise_var * torch.randn(*images.shape)
     # Clip the images to be between 0 and 1
     noisy_imgs = np.clip(noisy_imgs, 0., 1.)
     return noisy_imgs
@@ -59,7 +61,8 @@ def add_noise(images, cnfg):
 
 def run_epoch(model, optimizer, criterion, train_loader, cnfg, e):
     train_loss = 0.0
-    for data in train_loader:
+    pbar = tqdm(train_loader)
+    for data in pbar:
         images, _ = data
         noisy_imgs = add_noise(images, cnfg)
         optimizer.zero_grad()
@@ -79,7 +82,8 @@ def validate(model, criterion, valid_loader, cnfg, e):
     valid_loss = 0.0
     with torch.no_grad():
         model.eval()
-        for data in valid_loader:
+        pbar = tqdm(valid_loader)
+        for data in pbar:
             images, _ = data
             noisy_imgs = add_noise(images, cnfg)
             outputs = model(noisy_imgs)
@@ -106,21 +110,21 @@ def plot_epochs_loss(train_losses, valid_losses):
 
 def train(cnfg):
     train_data = datasets.MNIST(root='data', train=True, download=True, transform=transforms.ToTensor())
-    train_loader, valid_loader = split_train_valid(train_data, cnfg['batch_size'], valid_split=cnfg['valid_split'],
+    train_loader, valid_loader = split_train_valid(train_data, cnfg.batch_size, valid_split=cnfg.valid_split,
                                                    shuffle_dataset=True, random_seed=42)
 
     orig_h, orig_w = next(iter(train_loader))[0].shape[2], next(iter(train_loader))[0].shape[3]
-    model = DeNoiser(induce_latent_dim(orig_h, orig_w, cnfg['alpha']))
+    model = DeNoiser(induce_latent_dim(orig_h, orig_w, cnfg.alpha))
 
-    if cnfg['loss'] == 'mse':
+    if cnfg.loss == 'mse':
         criterion = nn.MSELoss(reduction='sum')
     else:
         criterion = nn.BCELoss(reduction='sum')
 
-    optimizer = torch.optim.Adam(model.parameters(), cnfg['lr'])
+    optimizer = torch.optim.Adam(model.parameters(), cnfg.lr)
 
     train_losses, valid_losses = list(), list()
-    for e in range(1, cnfg['epochs'] + 1):
+    for e in range(1, cnfg.epochs + 1):
         train_loss = run_epoch(model, optimizer, criterion, train_loader, cnfg, e)
         train_losses.append(train_loss)
         valid_loss = validate(model, criterion, valid_loader, cnfg, e)

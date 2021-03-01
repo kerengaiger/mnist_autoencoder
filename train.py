@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--valid_split', type=float, default=0.2, help="part of dataset to use as validation set")
     parser.add_argument('--loss', type=str, default='mse', help="loss function to use for training: BCE or MSE")
     parser.add_argument('--plot_imgs', action='store_true', help="plots a random image in each epoch")
-    parser.add_argument('--save_dir', type=str, default='./figures/', help="directory to stores figures in case "
+    parser.add_argument('--save_dir', type=str, default='./figures/', help="directory to store figures in case "
                                                                            "plot_imgs is configured")
     parser.add_argument('--model_file', type=str, default='mnist_autoencoder.pt', help="trained model path")
     return parser.parse_args()

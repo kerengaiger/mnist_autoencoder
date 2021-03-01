@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn as nn
 
-from utils import add_noise
+from utils import add_noise, plot_imgs
 from model import DeNoiser
 
 from tqdm import tqdm
@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('--valid_split', type=float, default=0.2, help="part of dataset to use as validation set")
     parser.add_argument('--loss', type=str, default='mse', help="loss function to use for training: BCE or MSE")
     parser.add_argument('--plot_imgs', action='store_true', help="plots a random image in each epoch")
+    parser.add_argument('--save_dir', type=str, default='./figures/', help="directory to stores figures in case "
+                                                                           "plot_imgs is configured")
     parser.add_argument('--model_file', type=str, default='mnist_autoencoder.pt', help="trained model path")
     return parser.parse_args()
 
@@ -54,21 +56,12 @@ def induce_latent_dim(h, w, alpha):
     return int(np.floor(h * w * alpha))
 
 
-def plot_batch(noisy_imgs, outputs, batch_size, fig_name):
-    noisy_imgs = noisy_imgs.numpy()
-    outputs = outputs.view(batch_size, 1, 28, 28)
-    outputs = outputs.detach().numpy()
-    fig, axes = plt.subplots(nrows=2, ncols=batch_size, figsize=(25, 4))
-    # input images on top row, reconstructions on bottom
-    for noisy_imgs, row in zip([noisy_imgs, outputs], axes):
-        for img, ax in zip(noisy_imgs, row):
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-            ax.imshow(np.squeeze(img), cmap='gray')
-    fig.savefig(fig_name)
+def plot_batch(noisy_imgs, outputs, save_dir, fig_name):
+    plot_imgs(noisy_imgs, save_dir, f'{fig_name}_noisy')
+    plot_imgs(outputs, save_dir, f'{fig_name}_clean')
 
 
-def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs, plot_labels):
+def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs):
     train_loss = 0.0
     pbar = tqdm(train_loader)
     for data in pbar:
@@ -85,7 +78,7 @@ def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs, plo
     if cnfg.plot_imgs:
         noisy_imgs_plot = add_noise(plot_imgs, cnfg.noise_var)
         outputs_plot = model(noisy_imgs_plot)
-        plot_batch(noisy_imgs_plot, outputs_plot, cnfg.batch_size, f'epoch_{e}')
+        plot_batch(noisy_imgs_plot, outputs_plot, cnfg.save_dir, f'epoch_{e}')
     return train_loss
 
 
@@ -133,11 +126,11 @@ def train(cnfg):
 
     optimizer = torch.optim.Adam(model.parameters(), cnfg.lr)
 
-    batch_imgs_plot, batch_labels_plot = next(iter(train_loader))[0], next(iter(train_loader))[1]
+    batch_imgs_plot = next(iter(train_loader))[0]
 
     train_losses, valid_losses = list(), list()
     for e in range(1, cnfg.epochs + 1):
-        train_loss = run_epoch(model, optimizer, criterion, train_loader, cnfg, e, batch_imgs_plot, batch_labels_plot)
+        train_loss = run_epoch(model, optimizer, criterion, train_loader, cnfg, e, batch_imgs_plot)
         train_losses.append(train_loss)
         print('Epoch: {}'.format(e),
               '\tTraining Loss: {:.4f}'.format(train_loss))

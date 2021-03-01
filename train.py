@@ -13,6 +13,9 @@ from model import DeNoiser
 
 from tqdm import tqdm
 
+import os
+import pathlib
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -23,7 +26,8 @@ def parse_args():
     parser.add_argument('--noise_var', type=float, default=0.5, help="variance of gausian noise")
     parser.add_argument('--valid_split', type=float, default=0.2, help="part of dataset to use as validation set")
     parser.add_argument('--loss', type=str, default='mse', help="loss function to use for training: BCE or MSE")
-    parser.add_argument('--plot_imgs', action='store_true', help="plots a random image in each epoch")
+    parser.add_argument('--plot_imgs', action='store_true', help="plots the first epoch images in each epoch")
+    parser.add_argument('--plot_kernels', action='store_true', help="plots the conv1 kernels in each epoch")
     parser.add_argument('--save_dir', type=str, default='./figures/', help="directory to store figures in case "
                                                                            "plot_imgs is configured")
     parser.add_argument('--model_file', type=str, default='mnist_autoencoder.pt', help="trained model path")
@@ -61,7 +65,10 @@ def plot_batch(noisy_imgs, outputs, save_dir, fig_name):
     plot_imgs(outputs, save_dir, f'{fig_name}_clean')
 
 
-def plot_kernel_map(model, input, e):
+def plot_kernel_map(model, input, e, save_dir):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     input = torch.unsqueeze(input, 0)
     output = model(input)
 
@@ -74,7 +81,7 @@ def plot_kernel_map(model, input, e):
             axarr[row][ax].get_xaxis().set_visible(False)
             axarr[row][ax].get_yaxis().set_visible(False)
             i += 1
-    fig.savefig(f'kernal_conv1_epoch_{e}.png')
+    fig.savefig(pathlib.Path(save_dir, f'kernal_conv1_epoch_{e}.png'))
 
 
 def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs):
@@ -96,7 +103,8 @@ def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs):
         outputs_plot = model(noisy_imgs_plot)
         plot_batch(noisy_imgs_plot, outputs_plot, cnfg.save_dir, f'epoch_{e}')
 
-    plot_kernel_map(model, plot_imgs[0], e)
+    if cnfg.plot_kernels:
+        plot_kernel_map(model, plot_imgs[0], e, cnfg.save_dir)
     return train_loss
 
 

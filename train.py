@@ -61,6 +61,22 @@ def plot_batch(noisy_imgs, outputs, save_dir, fig_name):
     plot_imgs(outputs, save_dir, f'{fig_name}_clean')
 
 
+def plot_kernel_map(model, input, e):
+    input = torch.unsqueeze(input, 0)
+    output = model(input)
+
+    kernels = model.conv1.weight.detach()
+    fig, axarr = plt.subplots(4, 8)
+    i = 0
+    for row in range(4):
+        for ax in range(8):
+            axarr[row][ax].imshow(kernels[i].squeeze(), cmap='gray')
+            axarr[row][ax].get_xaxis().set_visible(False)
+            axarr[row][ax].get_yaxis().set_visible(False)
+            i += 1
+    fig.savefig(f'kernal_conv1_epoch_{e}.png')
+
+
 def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs):
     train_loss = 0.0
     pbar = tqdm(train_loader)
@@ -79,6 +95,8 @@ def run_epoch(model, optimizer, criterion, train_loader, cnfg, e, plot_imgs):
         noisy_imgs_plot = add_noise(plot_imgs, cnfg.noise_var)
         outputs_plot = model(noisy_imgs_plot)
         plot_batch(noisy_imgs_plot, outputs_plot, cnfg.save_dir, f'epoch_{e}')
+
+    plot_kernel_map(model, plot_imgs[0], e)
     return train_loss
 
 

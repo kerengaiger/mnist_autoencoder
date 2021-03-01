@@ -5,7 +5,7 @@ AutoEncoder implementation in Pytorch trained on the MNIST data.
 ## Usage
 ### Calling the code
 #### train
-Train an AutoEncoder on MNIST data, calculate test error and save trained model
+Trains an AutoEncoder on MNIST data, calculates test error and saves the trained model
 
 ##### Running example
 ```sh
@@ -13,7 +13,7 @@ python train.py --lr 0.001 --alpha 0.5 --batch_size 32 --epochs 10 --noise_var 0
 -- plot_kernel --save_dir ./outputs/ --model_file 'mnist_autoencoder.pt
 ```
 #### inference
-Load the trained model, sample few images from dataset and reduce their generated noise and generate new images. 
+Loads the trained model, samples few images from the dataset and reduces their generated noise and generates new images. 
 
 ##### Running example
 ```sh

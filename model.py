@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -44,7 +45,7 @@ class DeNoiser(nn.Module):
         x = F.relu(self.t_conv2(x))
         x = F.relu(self.t_conv3(x))
         # transpose again, output should have a sigmoid applied
-        x = F.sigmoid(self.conv_out(x))
+        x = torch.sigmoid(self.conv_out(x))
         return x
 
     def forward(self, x):

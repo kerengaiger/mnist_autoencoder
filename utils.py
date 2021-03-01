@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import pathlib
 
 
 def add_noise(images, noise_var):
@@ -11,14 +13,17 @@ def add_noise(images, noise_var):
     return noisy_imgs
 
 
-def plot_imgs(imgs, fig_name):
+def plot_imgs(imgs, save_dir, fig_name):
     batch_size = imgs.shape[0]
     imgs = imgs.detach().numpy()
-    imgs = imgs.view(batch_size, 1, 28, 28)
 
     fig, axes = plt.subplots(nrows=1, ncols=batch_size, figsize=(25, 4))
     for img, ax in zip(imgs, axes):
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.imshow(np.squeeze(img), cmap='gray')
-    fig.savefig(fig_name)
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    fig.savefig(pathlib.Path(save_dir, fig_name))
